@@ -13,6 +13,7 @@ def parsing_news(url):
         root = ET.fromstring(xml_content)
 
         channel = root.find('.//channel')  # Находим тег <channel>
+        channel_name = ''
         if channel is not None: # Добавляем проверку на None
             channel_name = channel.find('title').text # Получаем текст напрямую из найденного канала
             print(channel_name)
@@ -21,9 +22,9 @@ def parsing_news(url):
         for item in root.findall('.//item'): # Находим все теги <item>
             title = item.find('title').text if item.find('title') is not None else "Нет заголовка"
             pub_date = item.find('pubDate').text if item.find('pubDate') is not None else "Нет даты публикации"
-            link = item.find('link').text if item.find('link') is not None else ""
+            link = item.find('link').text if item.find('link') is not None else "Нет ссылки"
 
-            print(f'{pub_date} {title}')
+            print(f'{pub_date} {channel_name} {title} {link}')
 
     except requests.exceptions.RequestException as e:
         print(f"Ошибка при запросе к URL: {e}")
