@@ -29,7 +29,7 @@ async def fetch_rss(session: aiohttp.ClientSession, rss_link: str) -> list[dict]
             root = ET.fromstring(xml_content)
             channel = root.find('.//channel')
             channel_name = channel.find('title').text if channel is not None and channel.find('title') is not None else ""
-            print(f'Обработка канала: {channel_name}')
+            # print(f'Обработка канала: {channel_name}')
             for item in root.findall('.//item'):
                 title = item.find('title').text if item.find('title') is not None else "Нет заголовка"
                 pub_date = item.find('pubDate').text if item.find('pubDate') is not None else "Нет даты публикации"
@@ -201,7 +201,8 @@ def main(url: str, db_path: str) -> None:
 if __name__ == '__main__':
     URL = "https://ru.investing.com/webmaster-tools/rss"
     db_path = r'C:\Users\Alkor\gd\data_rss_db\rss_news_investing.db'
-    interval_sec = 3600  # 1 час
+    # interval_sec = 3600  # 1 час
+    interval_sec = 300  # 5 минут
 
     while True:
         print_blue(f"\nЗапуск сбора данных: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
