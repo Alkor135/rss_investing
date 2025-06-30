@@ -115,41 +115,41 @@ def save_to_sqlite(df: pd.DataFrame, db_path: str) -> None:
         except Exception as e:
             print_red(f"Ошибка при сохранении в БД: {e}")
 
-def drop_duplicate_titles(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Удаляет дубликаты по полю 'title', оставляя первую строку с самой ранней датой.
-    """
-    df = df.copy()
-    df = (
-        df.sort_values(by=["title", "date"])
-        .drop_duplicates(subset=["title"], keep="first")
-        .reset_index(drop=True)
-    )
-    return df
-
-def remove_existing_titles_from_df(df: pd.DataFrame, db_path: str) -> pd.DataFrame:
-    """
-    Удаляет из df строки, у которых title уже есть в БД за последние 1 дня.
-    Если база пуста, возвращает исходный df.
-    """
-    with sqlite3.connect(db_path) as conn:
-        try:
-            cursor = conn.execute("SELECT COUNT(*) FROM news")
-            count = cursor.fetchone()[0]
-            if count == 0:
-                return df
-            three_days_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-            query = """
-                SELECT title FROM news
-                WHERE date >= ?
-            """
-            existing_titles = pd.read_sql_query(query, conn, params=(three_days_ago,))
-            existing_titles_set = set(existing_titles['title'])
-        except Exception as e:
-            print_red(f"Ошибка при чтении из БД: {e}")
-            return df
-    filtered_df = df[~df['title'].isin(existing_titles_set)].reset_index(drop=True)
-    return filtered_df
+# def drop_duplicate_titles(df: pd.DataFrame) -> pd.DataFrame:
+#     """
+#     Удаляет дубликаты по полю 'title', оставляя первую строку с самой ранней датой.
+#     """
+#     df = df.copy()
+#     df = (
+#         df.sort_values(by=["title", "date"])
+#         .drop_duplicates(subset=["title"], keep="first")
+#         .reset_index(drop=True)
+#     )
+#     return df
+#
+# def remove_existing_titles_from_df(df: pd.DataFrame, db_path: str) -> pd.DataFrame:
+#     """
+#     Удаляет из df строки, у которых title уже есть в БД за последние 1 дня.
+#     Если база пуста, возвращает исходный df.
+#     """
+#     with sqlite3.connect(db_path) as conn:
+#         try:
+#             cursor = conn.execute("SELECT COUNT(*) FROM news")
+#             count = cursor.fetchone()[0]
+#             if count == 0:
+#                 return df
+#             three_days_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+#             query = """
+#                 SELECT title FROM news
+#                 WHERE date >= ?
+#             """
+#             existing_titles = pd.read_sql_query(query, conn, params=(three_days_ago,))
+#             existing_titles_set = set(existing_titles['title'])
+#         except Exception as e:
+#             print_red(f"Ошибка при чтении из БД: {e}")
+#             return df
+#     filtered_df = df[~df['title'].isin(existing_titles_set)].reset_index(drop=True)
+#     return filtered_df
 
 def remove_duplicates_from_db(db_path: str) -> None:
     """
@@ -191,8 +191,9 @@ def main(url: str, db_path: str) -> None:
         return
     print_blue('Ссылки на RSS ленты получены')
     df = parsing_news(rss_links)
-    df = drop_duplicate_titles(df)
-    df = remove_existing_titles_from_df(df, db_path)
+    df = df.sort_values(by='date')  # Сортировка по date в ascending order
+    # df = drop_duplicate_titles(df)
+    # df = remove_existing_titles_from_df(df, db_path)
     save_to_sqlite(df, db_path)
     print_green(f"Новости сохранены в базе данных. Сохранено строк: {len(df)}")
     remove_duplicates_from_db(db_path)
