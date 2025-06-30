@@ -29,6 +29,7 @@ async def fetch_rss(session: aiohttp.ClientSession, rss_link: str) -> list[dict]
             root = ET.fromstring(xml_content)
             channel = root.find('.//channel')
             channel_name = channel.find('title').text if channel is not None and channel.find('title') is not None else ""
+            print(f'Обработка канала: {channel_name}')
             for item in root.findall('.//item'):
                 title = item.find('title').text if item.find('title') is not None else "Нет заголовка"
                 pub_date = item.find('pubDate').text if item.find('pubDate') is not None else "Нет даты публикации"
@@ -128,7 +129,7 @@ def drop_duplicate_titles(df: pd.DataFrame) -> pd.DataFrame:
 
 def remove_existing_titles_from_df(df: pd.DataFrame, db_path: str) -> pd.DataFrame:
     """
-    Удаляет из df строки, у которых title уже есть в БД за последние 3 дня.
+    Удаляет из df строки, у которых title уже есть в БД за последние 1 дня.
     Если база пуста, возвращает исходный df.
     """
     with sqlite3.connect(db_path) as conn:
@@ -137,7 +138,7 @@ def remove_existing_titles_from_df(df: pd.DataFrame, db_path: str) -> pd.DataFra
             count = cursor.fetchone()[0]
             if count == 0:
                 return df
-            three_days_ago = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+            three_days_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
             query = """
                 SELECT title FROM news
                 WHERE date >= ?

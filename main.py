@@ -60,6 +60,7 @@ def parsing_news(rss_links: list[str]) -> pd.DataFrame:
             root = ET.fromstring(xml_content)
             channel = root.find('.//channel')
             channel_name = channel.find('title').text if channel is not None and channel.find('title') is not None else ""
+            print(f'Обработка канала: {channel_name}')
             for item in root.findall('.//item'):
                 title = item.find('title').text if item.find('title') is not None else "Нет заголовка"
                 pub_date = item.find('pubDate').text if item.find('pubDate') is not None else "Нет даты публикации"

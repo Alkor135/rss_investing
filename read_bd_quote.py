@@ -20,36 +20,37 @@ def read_db_news(db_path_news, date_max, date_min) -> pd.DataFrame:
         """
         return pd.read_sql_query(query, conn, params=(date_min, date_max))
 
+def save_titles_to_file(df_news: pd.DataFrame, file_path: Path) -> None:
+    """
+    Сохраняет все строки поля title из датафрейма df_news в файл с указанным путем.
+    """
+    with open(file_path, 'w', encoding='utf-8') as file:
+        for title in df_news['title']:
+            file.write(f"{title}\n")
+
 def main(path_db_quote: Path, path_db_news: Path) -> None:
     
     df = read_db_quote(path_db_quote)
-    df['TRADEDATE'] = pd.to_datetime(df['TRADEDATE'])  # Преобразуем даты в datetime
 
     # Перебираем пары строк начиная с последней
-    for i in range(len(df) - 1, 0, -1):  # Начинаем с последнего индекса и шагаем на 2 назад
+    for i in range(len(df) - 1, 0, -1):  # Начинаем с последнего индекса и шагаем на 1 назад
         row1 = df.iloc[i]
         row2 = df.iloc[i-1]
-     
-        date_max = row1['TRADEDATE']
-        date_min = row2['TRADEDATE']
 
-        # Преобразуем в строку с форматом YYYY-MM-DD
-        date_str = date_max.strftime('%Y-%m-%d')
-        file_name = f"{date_str}.txt"
+        file_name = f"{row1['TRADEDATE']}.txt"
+        date_max = f'{row1['TRADEDATE']} 18:45:00'
+        date_min = f'{row2['TRADEDATE']} 18:45:00'
 
-        # Добавляем время 18:45:00 к датам
-        date_max = date_max.replace(hour=18, minute=45, second=0)
-        date_min = date_min.replace(hour=18, minute=45, second=0)
-
-        date_max_str = date_max.strftime('%Y-%m-%d %H:%M:%S')
-        date_min_str = date_min.strftime('%Y-%m-%d %H:%M:%S')
-        
-        print(f"Пара строк: {i}, {i-1}")
+        # print(f"Пара строк: {i}, {i-1}")
         print(f"{file_name} Дата max: {date_max}, Дата min: {date_min}")
-        # df_news = read_db_news(path_db_news, date_max, date_min)
-        df_news = read_db_news(path_db_news, date_max_str, date_min_str)
+        df_news = read_db_news(path_db_news, date_max, date_min)
         print(df_news)
-        break
+        if len(df_news) == 0:
+            break
+
+        # Создайте директорию 'news', если она еще не существует
+        (Path('news')).mkdir(parents=True, exist_ok=True)
+        save_titles_to_file(df_news, Path(fr'news/{file_name}'))
 
 if __name__ == '__main__':  # Точка входа при запуске этого скрипта
     path_db_quote = Path(fr'c:\Users\Alkor\gd\data_quote_db\RTS_day_2014.db')
