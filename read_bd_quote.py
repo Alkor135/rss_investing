@@ -1,3 +1,6 @@
+"""
+Скрипт создает текстовые файлы из rss ленты новостей (investing.com) БД SQLite
+"""
 import pandas as pd
 from pathlib import Path
 import sqlite3
@@ -25,8 +28,13 @@ def save_titles_to_file(df_news: pd.DataFrame, file_path: Path) -> None:
     Сохраняет все строки поля title из датафрейма df_news в файл с указанным путем.
     """
     with open(file_path, 'w', encoding='utf-8') as file:
-        for title in df_news['title']:
-            file.write(f"{title}\n")
+        # for title in df_news['title']:
+        #     file.write(f"{title}\n")
+        # Сохраняет в файл не только поле title, но и поле date
+        for index, row in df_news.iterrows():
+            date = str(row['date'])  # Преобразуем дату в строку для записи в файл
+            title = row['title']
+            file.write(f"{date}\t{title}\n")
 
 def main(path_db_quote: Path, path_db_news: Path) -> None:
     
@@ -38,8 +46,12 @@ def main(path_db_quote: Path, path_db_news: Path) -> None:
         row2 = df.iloc[i-1]
 
         file_name = f"{row1['TRADEDATE']}.txt"
-        date_max = f'{row1['TRADEDATE']} 18:45:00'
-        date_min = f'{row2['TRADEDATE']} 18:45:00'
+        # Для МСК времени в БД
+        # date_max = f'{row1['TRADEDATE']} 18:45:00'
+        # date_min = f'{row2['TRADEDATE']} 18:45:00'
+        # Для GMT времени в БД
+        date_max = f'{row1['TRADEDATE']} 15:45:00'
+        date_min = f'{row2['TRADEDATE']} 15:45:00'
 
         # print(f"Пара строк: {i}, {i-1}")
         print(f"{file_name} Дата max: {date_max}, Дата min: {date_min}")

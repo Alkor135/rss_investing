@@ -1,3 +1,8 @@
+"""
+Скрипт собирает rss ленту новостей с https://ru.investing.com/webmaster-tools/rss и помещает их в
+БД SQlite
+"""
+
 import asyncio
 import aiohttp
 import requests
@@ -96,7 +101,7 @@ def parsing_news(rss_links: list[str]) -> pd.DataFrame:
 
 def save_to_sqlite(df: pd.DataFrame, db_path: str) -> None:
     """
-    Сохраняет DataFrame в SQLite базу данных.
+    Сохраняет DataFrame c rss лентой новостей в SQLite базу данных.
     """
     if df.empty:
         print_red("DataFrame пустой, нечего сохранять в БД.")
