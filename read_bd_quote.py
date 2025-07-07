@@ -34,7 +34,8 @@ def save_titles_to_file(df_news: pd.DataFrame, file_path: Path) -> None:
         for index, row in df_news.iterrows():
             date = str(row['date'])  # Преобразуем дату в строку для записи в файл
             title = row['title']
-            file.write(f"{date}\t{title}\n")
+            # file.write(f"{date}\t{title}\n")  # Записываем дату и заголовок в файл
+            file.write(f"{title}\n")  # Записываем только заголовок в файл
 
 def main(path_db_quote: Path, path_db_news: Path) -> None:
     
