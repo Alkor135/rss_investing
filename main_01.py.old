@@ -121,10 +121,46 @@ def save_to_sqlite(df: pd.DataFrame, db_path: str) -> None:
         except Exception as e:
             print_red(f"Ошибка при сохранении в БД: {e}")
 
+# def drop_duplicate_titles(df: pd.DataFrame) -> pd.DataFrame:
+#     """
+#     Удаляет дубликаты по полю 'title', оставляя первую строку с самой ранней датой.
+#     """
+#     df = df.copy()
+#     df = (
+#         df.sort_values(by=["title", "date"])
+#         .drop_duplicates(subset=["title"], keep="first")
+#         .reset_index(drop=True)
+#     )
+#     return df
+#
+# def remove_existing_titles_from_df(df: pd.DataFrame, db_path: str) -> pd.DataFrame:
+#     """
+#     Удаляет из df строки, у которых title уже есть в БД за последние 1 дня.
+#     Если база пуста, возвращает исходный df.
+#     """
+#     with sqlite3.connect(db_path) as conn:
+#         try:
+#             cursor = conn.execute("SELECT COUNT(*) FROM news")
+#             count = cursor.fetchone()[0]
+#             if count == 0:
+#                 return df
+#             three_days_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+#             query = """
+#                 SELECT title FROM news
+#                 WHERE date >= ?
+#             """
+#             existing_titles = pd.read_sql_query(query, conn, params=(three_days_ago,))
+#             existing_titles_set = set(existing_titles['title'])
+#         except Exception as e:
+#             print_red(f"Ошибка при чтении из БД: {e}")
+#             return df
+#     filtered_df = df[~df['title'].isin(existing_titles_set)].reset_index(drop=True)
+#     return filtered_df
+
 def remove_duplicates_from_db(db_path: str) -> None:
     """
-    Удаляет дубликаты из таблицы news по дате (без времени) и title, оставляя одну запись.
-    Выводит количество удалённых строк и выполняет VACUUM.
+    Удаляет дубликаты из таблицы news по полям date и title, оставляя одно вхождение.
+    Также выводит количество удалённых дубликатов и выполняет VACUUM.
     """
     try:
         with sqlite3.connect(db_path) as conn:
@@ -133,17 +169,10 @@ def remove_duplicates_from_db(db_path: str) -> None:
             conn.execute("""
                 DELETE FROM news
                 WHERE rowid NOT IN (
-                    SELECT rowid
-                    FROM (
-                        SELECT
-                            rowid,
-                            DATE(date) AS news_date,
-                            title,
-                            ROW_NUMBER() OVER (PARTITION BY DATE(date), title ORDER BY date ASC) AS rn
-                        FROM news
-                    ) AS subquery
-                    WHERE rn = 1
-                );
+                    SELECT MIN(rowid)
+                    FROM news
+                    GROUP BY date, title
+                )
             """)
             cursor = conn.execute("SELECT COUNT(*) FROM news")
             after_count = cursor.fetchone()[0]
@@ -152,9 +181,10 @@ def remove_duplicates_from_db(db_path: str) -> None:
     except Exception as e:
         print_red(f"Ошибка при удалении дубликатов из БД: {e}")
 
+    # VACUUM выполняем в отдельном соединении!
     try:
         with sqlite3.connect(db_path) as conn:
-            conn.isolation_level = None
+            conn.isolation_level = None  # Отключаем транзакции
             conn.execute("VACUUM")
             print_green("VACUUM выполнен: база данных оптимизирована.")
     except Exception as e:
@@ -168,6 +198,8 @@ def main(url: str, db_path: str) -> None:
     print_blue('Ссылки на RSS ленты получены')
     df = parsing_news(rss_links)
     df = df.sort_values(by='date')  # Сортировка по date в ascending order
+    # df = drop_duplicate_titles(df)
+    # df = remove_existing_titles_from_df(df, db_path)
     save_to_sqlite(df, db_path)
     print_green(f"Новости сохранены в базе данных. Сохранено строк: {len(df)}")
     remove_duplicates_from_db(db_path)
