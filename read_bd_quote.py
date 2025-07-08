@@ -66,7 +66,7 @@ def main(path_db_quote: Path, path_db_news: Path) -> None:
         save_titles_to_file(df_news, Path(fr'news/{file_name}'))
 
 if __name__ == '__main__':  # Точка входа при запуске этого скрипта
-    path_db_quote = Path(fr'c:\Users\Alkor\gd\data_quote_db\RTS_day_2014.db')
+    path_db_quote = Path(fr'c:\Users\Alkor\gd\data_quote_db\RTS_day_rss_2025.db')
     path_db_news = Path(fr'C:\Users\Alkor\gd\data_rss_db\rss_news_investing.db')
 
     main(path_db_quote, path_db_news)
