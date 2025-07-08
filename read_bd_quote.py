@@ -40,6 +40,9 @@ def save_titles_to_file(df_news: pd.DataFrame, file_path: Path) -> None:
 def main(path_db_quote: Path, path_db_news: Path) -> None:
     
     df = read_db_quote(path_db_quote)
+    df['TRADEDATE'] = pd.to_datetime(df['TRADEDATE'])
+    df.sort_values(by='TRADEDATE', inplace=True)
+    df['TRADEDATE'] = df['TRADEDATE'].astype(str)
 
     # Перебираем пары строк начиная с последней
     for i in range(len(df) - 1, 0, -1):  # Начинаем с последнего индекса и шагаем на 1 назад
