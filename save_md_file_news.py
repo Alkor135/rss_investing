@@ -29,9 +29,11 @@ def save_titles_to_markdown(df_news: pd.DataFrame, file_path: Path, next_bar: st
         file.write(f"---\nnext_bar: {next_bar}\n---\n\n")
         for _, row in df_news.iterrows():
             title = row['title']
-            file.write(f"- {title}\n")
+            # date = str(row['date'])  # Преобразуем дату в строку для записи в файл
+            # file.write(f"{date}\t{title}\n")  # Записываем дату и заголовок в файл
+            file.write(f"- {title}\n")  # Записываем только заголовок в файл
 
-def main(path_db_quote: Path, path_db_news: Path) -> None:
+def main(path_db_quote: Path, path_db_news: Path, md_news_dir: Path) -> None:
     """
     Основная функция: читает котировки и новости, формирует и сохраняет markdown-файлы с новостями и метаданными.
     """
@@ -59,12 +61,23 @@ def main(path_db_quote: Path, path_db_news: Path) -> None:
         if len(df_news) == 0:
             break
 
-        (Path('c:/news')).mkdir(parents=True, exist_ok=True)
+        # (Path('c:/news')).mkdir(parents=True, exist_ok=True)
         # direction = "up" if row1['OPEN'] < row1['CLOSE'] else "down"
-        save_titles_to_markdown(df_news, Path(fr'c:/news/{file_name}'), row1['next_bar'])
+        save_titles_to_markdown(df_news, Path(fr'{md_news_dir}/{file_name}'), row1['next_bar'])
 
 if __name__ == '__main__':
     path_db_quote = Path(fr'c:\Users\Alkor\gd\data_quote_db\RTS_day_rss_2025.db')
     path_db_news = Path(fr'C:\Users\Alkor\gd\data_rss_db\rss_news_investing.db')
+    md_news_dir = Path('c:/news')
 
-    main(path_db_quote, path_db_news)
+    if not path_db_quote.exists():
+        print("Ошибка: Файл базы данных котировок не найден.")
+        exit()
+
+    if not path_db_news.exists():
+        print("Ошибка: Файл базы данных новостей не найден.")
+        exit()
+
+    (Path(md_news_dir)).mkdir(parents=True, exist_ok=True)
+
+    main(path_db_quote, path_db_news, md_news_dir)
