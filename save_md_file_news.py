@@ -1,6 +1,17 @@
 import pandas as pd
 from pathlib import Path
 import sqlite3
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+def msk_to_gmt(dt_str: str) -> str:
+    """
+    Преобразует строку даты-времени из МСК в GMT (ISO-формат).
+    """
+    dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+    dt = dt.replace(tzinfo=ZoneInfo("Europe/Moscow"))
+    dt_gmt = dt.astimezone(ZoneInfo("Etc/GMT"))
+    return dt_gmt.strftime("%Y-%m-%d %H:%M:%S")
 
 def read_db_quote(db_path_quote: Path) -> pd.DataFrame:
     """
@@ -52,11 +63,14 @@ def main(path_db_quote: Path, path_db_news: Path, md_news_dir: Path) -> None:
         row2 = df.iloc[i-1]
 
         file_name = f"{row1['TRADEDATE']}.md"
-        date_max = f"{row1['TRADEDATE']} 15:45:00"
-        date_min = f"{row2['TRADEDATE']} 15:45:00"
+        date_max = f"{row1['TRADEDATE']} 18:45:00"
+        date_min = f"{row2['TRADEDATE']} 18:45:00"
+        date_max_gmt = msk_to_gmt(date_max)
+        date_min_gmt = msk_to_gmt(date_min)
 
         print(f"{file_name} Дата max: {date_max}, Дата min: {date_min}")
-        df_news = read_db_news(path_db_news, date_max, date_min)
+        # df_news = read_db_news(path_db_news, date_max, date_min)
+        df_news = read_db_news(path_db_news, date_max_gmt, date_min_gmt)
         print(df_news)
         if len(df_news) == 0:
             break
