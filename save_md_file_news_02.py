@@ -111,7 +111,7 @@ def main(path_db_quote: Path, path_db_news: Path, md_news_dir: Path) -> None:
 
         print(f"{file_name} Дата max: {date_max}, Дата min: {date_min}")
         df_news = read_db_news(path_db_news, date_max_gmt, date_min_gmt)
-        print(df_news)
+        # print(df_news)
         if len(df_news) == 0:
             break
 
